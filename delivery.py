@@ -7,7 +7,9 @@ class MenuItem:
 
     def __init__(self, name: str, price: int):
         """Store the name and the price. The price goes through the setter, so it is checked."""
-        raise NotImplementedError("core: store the name, and set the price through the setter")
+        self.name = name
+        self.price = price
+        # raise NotImplementedError("core: store the name, and set the price through the setter")
 
     @property
     def price(self) -> int:
@@ -17,15 +19,24 @@ class MenuItem:
     @price.setter
     def price(self, value: int) -> None:
         """Set the price. Raise ValueError if it is 0 or less, and keep the old price."""
-        raise NotImplementedError("core: check the new price, then store it in self._price")
+        if value <= 0 :
+            raise ValueError(f"price must be more than 0 baht, got {value}")
+        self._price = value
+        # raise NotImplementedError("core: check the new price, then store it in self._price")
 
     def __repr__(self) -> str:
         """Return the developer view, for example MenuItem('Pad Thai', 60)."""
-        raise NotImplementedError("core: return the developer view, ClassName('name', price)")
+        return f"{type(self).__name__}({self.name!r}, {self.price})"
+        # raise NotImplementedError("core: return the developer view, ClassName('name', price)")
 
     def __eq__(self, other: object) -> bool:
         """Two menu items are equal when their names and prices are equal."""
-        raise NotImplementedError("core: compare name and price, or return NotImplemented")
+        if not isinstance(other, MenuItem):
+            return NotImplemented
+        if self.name == other.name and self.price == other.price :
+            return True
+        return False     
+        # raise NotImplementedError("core: compare name and price, or return NotImplemented")
 
     def cost(self, quantity: int) -> int:
         """Provided: what quantity of this dish costs, in baht."""
@@ -37,7 +48,9 @@ class PromoItem(MenuItem):
 
     def cost(self, quantity: int) -> int:
         """Return what quantity costs when every third one is free."""
-        raise NotImplementedError("core: work out the free ones, then ask super() for the cost")
+        free_item = quantity // 3
+        return super().cost(quantity - free_item)
+        # raise NotImplementedError("core: work out the free ones, then ask super() for the cost")
 
 
 class Order:
@@ -48,19 +61,38 @@ class Order:
 
     def __init__(self, customer: str, lines: list[tuple[MenuItem, int]] | None = None):
         """Store the customer and a new list of lines. Never share a list with the caller or another order."""
-        raise NotImplementedError("core: store the customer and your own new list of lines")
+        self.customer = customer
+        if lines is None:
+            self.lines = []
+        else:
+            self.lines = lines.copy()
+        # raise NotImplementedError("core: store the customer and your own new list of lines")
 
     def add(self, item: MenuItem, quantity: int = 1) -> None:
         """Add one line. Raise ValueError if quantity is less than 1."""
-        raise NotImplementedError("core: check the quantity, then add the line")
+        if quantity < 1:
+            raise ValueError(f"quantity must be at least 1, got {quantity}")
+        self.lines.append((item, quantity))
+        # raise NotImplementedError("core: check the quantity, then add the line")
 
     def total(self) -> int:
         """Return the food cost plus the delivery fee; free delivery from free_delivery_from; 0 if empty."""
-        raise NotImplementedError("core: ask each item for its cost, then add delivery")
+        if len(self.lines) == 0:
+            return 0
+        food_cost = 0
+
+        for item, quantity in self.lines:
+            food_cost += item.cost(quantity)
+
+        if food_cost >= self.free_delivery_from:
+            return food_cost
+        return food_cost + self.delivery_fee
+        # raise NotImplementedError("core: ask each item for its cost, then add delivery")
 
     def summary(self) -> list[str]:
         """Return one text line per order line, for example "2 x Pad Thai"."""
-        raise NotImplementedError("core: build the summary lines with a list comprehension")
+        return [f"{quantity} x {item.name}" for item, quantity in self.lines]
+        # raise NotImplementedError("core: build the summary lines with a list comprehension")
 
 
 def cheapest(options: list) -> object | None:
@@ -68,4 +100,16 @@ def cheapest(options: list) -> object | None:
 
     An option can be anything with a total() method, not only an Order.
     """
-    raise NotImplementedError("core: return the option whose total() is smallest")
+    if len(options) == 0:
+        return None
+
+    cheapest_option = options[0]
+    cheapest_total = cheapest_option.total()
+
+    for i in range(1, len(options)):
+        current_total = options[i].total()
+        if current_total < cheapest_total:
+            cheapest_option = options[i]
+            cheapest_total = current_total
+    return cheapest_option
+    # raise NotImplementedError("core: return the option whose total() is smallest")
